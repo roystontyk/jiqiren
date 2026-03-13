@@ -19,42 +19,19 @@ jobs:
       - name: Install Nanobot
         run: pip install nanobot-ai
 
-      - name: Initialize Nanobot
-        run: nanobot onboard
-
       - name: Purge Webhook Conflicts
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
 
-      - name: Create Isolated Config
-        run: |
-          mkdir -p /home/runner/.nanobot
-          cat <<EOF > /home/runner/.nanobot/config.json
-          {
-            "providers": {
-              "gemini": {
-                "apiKey": "${{ secrets.GEMINI_API_KEY }}"
-              }
-            },
-            "channels": {
-              "telegram": {
-                "enabled": true,
-                "token": "${{ secrets.TELEGRAM_BOT_TOKEN }}",
-                "allowFrom": ["${{ secrets.TELEGRAM_USER_ID }}"]
-              }
-            },
-            "agents": {
-              "defaults": {
-                "model": "gemini/gemini-2.0-flash",
-                "temperature": 0.3
-              }
-            },
-            "debug": true
-          }
-          EOF
-
       - name: Run Nanobot Gateway
         env:
+          # Use the NANOBOT_ prefix to inject settings directly into the app
+          NANOBOT_PROVIDERS__GEMINI__API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NANOBOT_AGENTS__DEFAULTS__MODEL: "gemini/gemini-2.0-flash"
+          NANOBOT_CHANNELS__TELEGRAM__ENABLED: "true"
+          NANOBOT_CHANNELS__TELEGRAM__TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: '["${{ secrets.TELEGRAM_USER_ID }}"]'
+          # We also set standard keys for compatibility
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: nanobot gateway
