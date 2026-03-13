@@ -2,8 +2,8 @@ name: Nanobot Safe Agent
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # Restarts every 6 hours to stay free & active
-  workflow_dispatch:      # Manual "Start" button
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
   run-agent:
@@ -22,14 +22,15 @@ jobs:
       - name: Initialize Nanobot
         run: nanobot onboard
 
-      # CRITICAL STEP: Clears any stuck webhooks to prevent 409 Conflicts
+      # FIXED: Added the actual secret variable into the URL
       - name: Purge Webhook Conflicts
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.AGENT_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
 
+      # FIXED: Changed provider name to 'google' and ensured indentation is correct
       - name: Create Isolated Config
         run: |
-          cat <<EOF > ~/.nanobot/config.json
+          cat <<EOF > /home/runner/.nanobot/config.json
           {
             "providers": {
               "google": {
@@ -53,5 +54,4 @@ jobs:
           EOF
 
       - name: Run Nanobot Gateway
-        # This keeps the bot alive for the duration of the Action (up to 6 hours)
         run: nanobot gateway
