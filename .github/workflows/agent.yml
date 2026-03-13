@@ -20,18 +20,22 @@ jobs:
         run: pip install nanobot-ai
 
       - name: Purge Webhook Conflicts
+        # This clears any existing webhooks (like from Cloudflare or local tests)
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
 
       - name: Run Nanobot Gateway
         env:
-          # Use the NANOBOT_ prefix to inject settings directly into the app
+          # Model: gemini/gemini-2.5-flash-lite is the 2026 free tier standard
+          NANOBOT_AGENTS__DEFAULTS__MODEL: "gemini/gemini-2.5-flash-lite"
+          
+          # API Keys
           NANOBOT_PROVIDERS__GEMINI__API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          NANOBOT_AGENTS__DEFAULTS__MODEL: "gemini/gemini-2.0-flash"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          
+          # Telegram Channel
           NANOBOT_CHANNELS__TELEGRAM__ENABLED: "true"
           NANOBOT_CHANNELS__TELEGRAM__TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          # Use JSON array format for the ID list
           NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: '["${{ secrets.TELEGRAM_USER_ID }}"]'
-          # We also set standard keys for compatibility
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: nanobot gateway
