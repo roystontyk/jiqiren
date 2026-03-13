@@ -22,12 +22,12 @@ jobs:
       - name: Initialize Nanobot
         run: nanobot onboard
 
-      # FIXED: Added the actual secret variable into the URL
+      # Purge any existing webhooks using your specific secret name
       - name: Purge Webhook Conflicts
         run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.AGENT_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
 
-      # FIXED: Changed provider name to 'google' and ensured indentation is correct
+      # Create config using your exact Secret names
       - name: Create Isolated Config
         run: |
           cat <<EOF > /home/runner/.nanobot/config.json
@@ -40,7 +40,7 @@ jobs:
             "channels": {
               "telegram": {
                 "enabled": true,
-                "token": "${{ secrets.AGENT_BOT_TOKEN }}",
+                "token": "${{ secrets.TELEGRAM_BOT_TOKEN }}",
                 "allowFrom": ["${{ secrets.TELEGRAM_USER_ID }}"]
               }
             },
