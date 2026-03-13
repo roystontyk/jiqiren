@@ -19,17 +19,18 @@ jobs:
       - name: Install Nanobot
         run: pip install nanobot-ai
 
+      # We initialize first, then overwrite the file it creates
       - name: Initialize Nanobot
         run: nanobot onboard
 
-      # Purge any existing webhooks using your specific secret name
       - name: Purge Webhook Conflicts
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
 
-      # Create config using your exact Secret names
+      # FIXED: Explicitly creating the directory and using the full runner path
       - name: Create Isolated Config
         run: |
+          mkdir -p /home/runner/.nanobot
           cat <<EOF > /home/runner/.nanobot/config.json
           {
             "providers": {
@@ -52,6 +53,12 @@ jobs:
             }
           }
           EOF
+
+      # Debug step: This will show us if the file actually exists and has content
+      - name: Verify Config
+        run: |
+          ls -a /home/runner/.nanobot
+          grep -q "apiKey" /home/runner/.nanobot/config.json && echo "Config is populated" || echo "Config is EMPTY"
 
       - name: Run Nanobot Gateway
         run: nanobot gateway
