@@ -32,9 +32,6 @@ jobs:
           cat <<EOF > /home/runner/.nanobot/config.json
           {
             "providers": {
-              "google": {
-                "apiKey": "${{ secrets.GEMINI_API_KEY }}"
-              },
               "gemini": {
                 "apiKey": "${{ secrets.GEMINI_API_KEY }}"
               }
@@ -48,7 +45,7 @@ jobs:
             },
             "agents": {
               "defaults": {
-                "model": "google/gemini-1.5-flash",
+                "model": "gemini/gemini-1.5-flash",
                 "temperature": 0.3
               }
             }
@@ -58,5 +55,4 @@ jobs:
       - name: Run Nanobot Gateway
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GOOGLE_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: nanobot gateway
