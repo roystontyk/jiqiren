@@ -1,23 +1,57 @@
-name: Adaptive Nanobot Gateway
+name: Nanobot Safe Agent
 
 on:
-  workflow_dispatch: # Run it when you want to use it
   schedule:
-    - cron: '30 21 * * *' # Auto-start for your morning briefing
+    - cron: '0 */6 * * *' # Restarts every 6 hours to stay free & active
+  workflow_dispatch:      # Manual "Start" button
 
 jobs:
   run-agent:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Nanobot & Dependencies
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Nanobot
+        run: pip install nanobot-ai
+
+      - name: Initialize Nanobot
+        run: nanobot onboard
+
+      # CRITICAL STEP: Clears any stuck webhooks to prevent 409 Conflicts
+      - name: Purge Webhook Conflicts
         run: |
-          pip install nanobot-ai
-          # Install Node for MCP tools (Web search, etc)
-          sudo apt-get install -y nodejs npm 
-      - name: Run Adaptive Gateway
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.AGENT_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
+
+      - name: Create Isolated Config
+        run: |
+          cat <<EOF > ~/.nanobot/config.json
+          {
+            "providers": {
+              "google": {
+                "apiKey": "${{ secrets.GEMINI_API_KEY }}"
+              }
+            },
+            "channels": {
+              "telegram": {
+                "enabled": true,
+                "token": "${{ secrets.AGENT_BOT_TOKEN }}",
+                "allowFrom": ["${{ secrets.TELEGRAM_USER_ID }}"]
+              }
+            },
+            "agents": {
+              "defaults": {
+                "model": "google/gemini-1.5-flash",
+                "temperature": 0.3
+              }
+            }
+          }
+          EOF
+
+      - name: Run Nanobot Gateway
+        # This keeps the bot alive for the duration of the Action (up to 6 hours)
         run: nanobot gateway
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_USER_ID: ${{ secrets.TELEGRAM_USER_ID }}
