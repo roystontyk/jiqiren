@@ -1,3 +1,4 @@
+YAML
 name: Nanobot Free Agent (Public Secure)
 
 on:
@@ -10,7 +11,6 @@ permissions:
 
 jobs:
   run-agent:
-    # This 'if' check prevents the bot from running on random PRs from strangers
     if: github.event_name != 'pull_request' 
     runs-on: ubuntu-latest
     steps:
@@ -23,8 +23,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Nanobot
-        run: pip install nanobot-ai
+      - name: Install Nanobot and Search Fix
+        # Fix: Added specific duckduckgo-search version to prevent 'technical limitations' error
+        run: |
+          pip install nanobot-ai duckduckgo-search==7.2.1
 
       - name: Purge Webhook Conflicts
         run: |
@@ -36,16 +38,20 @@ jobs:
           # AI & Search
           NANOBOT_PROVIDERS__GEMINI__API_KEY: ${{ secrets.GEMINI_API_KEY }}
           NANOBOT_AGENTS__DEFAULTS__MODEL: "gemini/gemini-3.1-flash-lite-preview"
+          
+          # Fix: Added redundant provider keys to ensure the tool is forced to DuckDuckGo
           SEARCH_ENGINE: "duckduckgo"
+          WEB_SEARCH_PROVIDER: "duckduckgo"
+          NANOBOT_TOOLS__WEB__SEARCH__PROVIDER: "duckduckgo"
           
           # Telegram Security
           NANOBOT_CHANNELS__TELEGRAM__ENABLED: "true"
           NANOBOT_CHANNELS__TELEGRAM__TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          # CRITICAL: This whitelist is your only defense if someone gets your bot link
           NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: '["${{ secrets.TELEGRAM_USER_ID }}"]'
           
           # Auth Backups
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NANOBOT_WORKSPACE: "."
         run: nanobot gateway
 
       - name: Save and Push Reports
@@ -53,7 +59,6 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          # Only add .md and .json (memory) files
           git add *.md *.json 2>/dev/null || true
           if git diff --staged --quiet; then
             echo "No changes to save."
