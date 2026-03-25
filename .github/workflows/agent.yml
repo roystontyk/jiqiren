@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: write  # Crucial: This allows the bot to save files back to your repo
 
 jobs:
   run-agent:
@@ -14,23 +14,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 
+          fetch-depth: 0 # Fetches all history so it can push changes back
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install Nanobot and Search Fix
-        # Added specific version to prevent public runner search errors
-        run: pip install nanobot-ai duckduckgo-search==7.2.1
+      - name: Install Nanobot
+        run: pip install nanobot-ai
 
       - name: Purge Webhook Conflicts
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
 
       - name: Run Nanobot Gateway
-        timeout-minutes: 340 
+        timeout-minutes: 340 # Shuts down just before the 6-hour cron restart
         env:
           # LLM Config
           NANOBOT_PROVIDERS__GEMINI__API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -40,17 +39,16 @@ jobs:
           # Telegram Config
           NANOBOT_CHANNELS__TELEGRAM__ENABLED: "true"
           NANOBOT_CHANNELS__TELEGRAM__TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          # Keeping your preferred string-list format
-          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: '["${{ secrets.TELEGRAM_USER_ID }}"]'
+          # FIX: Removed outer single quotes so the list is valid for the new Nanobot version
+          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: ["${{ secrets.TELEGRAM_USER_ID }}"]
           
           # Forced Free Search
           SEARCH_ENGINE: "duckduckgo"
           DEFAULT_SEARCH_PROVIDER: "duckduckgo"
-          NANOBOT_TOOLS__WEB__SEARCH__PROVIDER: "duckduckgo"
         run: nanobot gateway
 
       - name: Save and Push Reports
-        if: always() 
+        if: always() # Ensures reports are saved even if the bot is stopped
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
