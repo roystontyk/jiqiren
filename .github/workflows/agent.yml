@@ -24,9 +24,10 @@ jobs:
       - name: Install Nanobot
         run: pip install nanobot-ai
 
+      # ✅ FIX 1: Remove extra spaces in Telegram API URL
       - name: Purge Webhook Conflicts
         run: |
-          curl -s -X POST "https://api.telegram.org/bot ${{ secrets.TELEGRAM_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
 
       - name: Run Nanobot Gateway
         timeout-minutes: 340 
@@ -40,7 +41,7 @@ jobs:
           NANOBOT_CHANNELS__TELEGRAM__ENABLED: "true"
           NANOBOT_CHANNELS__TELEGRAM__TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           
-          # ✅ FIX: Remove outer single quotes, escape inner quotes for valid JSON string
+          # ✅ FIX 2: Proper JSON array format (no outer single quotes)
           NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: "[\"${{ secrets.TELEGRAM_USER_ID }}\"]"
           
           # Forced Free Search
