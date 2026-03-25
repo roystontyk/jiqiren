@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write  # Crucial: This allows the bot to save files back to your repo
+  contents: write
 
 jobs:
   run-agent:
@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetches all history so it can push changes back
+          fetch-depth: 0 
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -29,7 +29,7 @@ jobs:
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
 
       - name: Run Nanobot Gateway
-        timeout-minutes: 340 # Shuts down just before the 6-hour cron restart
+        timeout-minutes: 340 
         env:
           # LLM Config
           NANOBOT_PROVIDERS__GEMINI__API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -39,8 +39,8 @@ jobs:
           # Telegram Config
           NANOBOT_CHANNELS__TELEGRAM__ENABLED: "true"
           NANOBOT_CHANNELS__TELEGRAM__TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          # FIX: Removed outer single quotes so the list is valid for the new Nanobot version
-          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: ["${{ secrets.TELEGRAM_USER_ID }}"]
+          # FIX: Using the bracketed string format that passes GitHub validation
+          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: '["${{ secrets.TELEGRAM_USER_ID }}"]'
           
           # Forced Free Search
           SEARCH_ENGINE: "duckduckgo"
@@ -48,10 +48,9 @@ jobs:
         run: nanobot gateway
 
       - name: Save and Push Reports
-        if: always() # Ensures reports are saved even if the bot is stopped
+        if: always() 
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add *.md memory/*.md 2>/dev/null || true
-          # Updated commit message to Jiqiren style
           git diff --quiet && git diff --staged --quiet || (git commit -m "Jiqiren Memory Update: $(date +'%Y-%m-%d %H:%M')" && git push)
