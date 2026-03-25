@@ -24,7 +24,6 @@ jobs:
       - name: Install Nanobot
         run: pip install nanobot-ai
 
-      # ✅ FIX 1: Remove extra spaces in Telegram API URL
       - name: Purge Webhook Conflicts
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
@@ -40,9 +39,8 @@ jobs:
           # Telegram Config
           NANOBOT_CHANNELS__TELEGRAM__ENABLED: "true"
           NANOBOT_CHANNELS__TELEGRAM__TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          
-          # ✅ FIX 2: Proper JSON array format (no outer single quotes)
-          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: "[\"${{ secrets.TELEGRAM_USER_ID }}\"]"
+          # UPDATED: Just passing the raw ID. Nanobot will wrap this into a list automatically.
+          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: ${{ secrets.TELEGRAM_USER_ID }}
           
           # Forced Free Search
           SEARCH_ENGINE: "duckduckgo"
