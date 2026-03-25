@@ -23,12 +23,10 @@ jobs:
           python-version: '3.11'
 
       - name: Install Nanobot and Search Fix
-        # Fix: Ensures the specific search driver is present to bypass the 'technical limitations' error
         run: |
           pip install nanobot-ai duckduckgo-search==7.2.1
 
       - name: Purge and Reset Webhook
-        # Fix: Added drop_pending_updates to clear the 'backlog' from before the rename
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
           sleep 2
@@ -49,7 +47,8 @@ jobs:
           # Telegram Config
           NANOBOT_CHANNELS__TELEGRAM__ENABLED: "true"
           NANOBOT_CHANNELS__TELEGRAM__TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: '["${{ secrets.TELEGRAM_USER_ID }}"]'
+          # Fix: Removed outer quotes so GitHub passes this as a valid JSON list
+          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: ["${{ secrets.TELEGRAM_USER_ID }}"]
           
           # Workspace & Identity
           NANOBOT_WORKSPACE: "."
