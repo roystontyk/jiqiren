@@ -33,16 +33,18 @@ jobs:
         env:
           # LLM Config
           NANOBOT_PROVIDERS__GEMINI__API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          NANOBOT_AGENTS__DEFAULTS__MODEL: "gemini/gemini-3.1-flash-lite-preview"
+          # Using a stable, high-performance model name
+          NANOBOT_AGENTS__DEFAULTS__MODEL: "gemini/gemini-1.5-flash"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           
           # Telegram Config
           NANOBOT_CHANNELS__TELEGRAM__ENABLED: "true"
           NANOBOT_CHANNELS__TELEGRAM__TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          # UPDATED: Just passing the raw ID. Nanobot will wrap this into a list automatically.
-          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: ${{ secrets.TELEGRAM_USER_ID }}
           
-          # Forced Free Search
+          # CRITICAL FIX: Brackets are required so Pydantic parses this as a LIST, not a STRING
+          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: "[${{ secrets.TELEGRAM_USER_ID }}]"
+          
+          # Search Config
           SEARCH_ENGINE: "duckduckgo"
           DEFAULT_SEARCH_PROVIDER: "duckduckgo"
         run: nanobot gateway
@@ -52,5 +54,13 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Ensure memory directory exists before adding
+          mkdir -p memory
           git add *.md memory/*.md 2>/dev/null || true
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Jiqiren Memory Update: $(date +'%Y-%m-%d %H:%M')" && git push)
+          # Only commit if there are actually changes to avoid workflow errors
+          if ! git diff --cached --quiet; then
+            git commit -m "Jiqiren Memory Update: $(date +'%Y-%m-%d %H:%M')"
+            git push
+          else
+            echo "No changes to commit."
+          fi
