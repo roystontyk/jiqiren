@@ -36,7 +36,7 @@ jobs:
         env:
           # AI & Search
           NANOBOT_PROVIDERS__GEMINI__API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          NANOBOT_AGENTS__DEFAULTS__MODEL: "gemini/gemini-3.1-flash-lite-preview"
+          NANOBOT_AGENTS__DEFAULTS__MODEL: "gemini/gemini-1.5-flash"
           
           # Force DuckDuckGo
           SEARCH_ENGINE: "duckduckgo"
@@ -47,8 +47,8 @@ jobs:
           # Telegram Config
           NANOBOT_CHANNELS__TELEGRAM__ENABLED: "true"
           NANOBOT_CHANNELS__TELEGRAM__TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          # FIX: Encapsulated in single quotes to pass as a string-list to the bot
-          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: '["${{ secrets.TELEGRAM_USER_ID }}"]'
+          # CORRECTED: No outer single quotes, allowing Pydantic to parse the list
+          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: ["${{ secrets.TELEGRAM_USER_ID }}"]
           
           # Workspace & Identity
           NANOBOT_WORKSPACE: "."
