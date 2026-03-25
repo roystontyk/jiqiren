@@ -47,7 +47,7 @@ jobs:
           # Telegram Config
           NANOBOT_CHANNELS__TELEGRAM__ENABLED: "true"
           NANOBOT_CHANNELS__TELEGRAM__TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          # Fix: Encapsulated the list in single quotes to satisfy YAML while providing the bot the list it needs
+          # FIX: Encapsulated in single quotes to pass as a string-list to the bot
           NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: '["${{ secrets.TELEGRAM_USER_ID }}"]'
           
           # Workspace & Identity
