@@ -1,4 +1,4 @@
-name: Nanobot Free Agent (Public Secure)
+name: Nanobot Free Agent (Jiqiren Public)
 
 on:
   schedule:
@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   run-agent:
-    if: github.event_name != 'pull_request' 
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,47 +22,38 @@ jobs:
           python-version: '3.11'
 
       - name: Install Nanobot and Search Fix
-        run: |
-          pip install nanobot-ai duckduckgo-search==7.2.1
+        # Added specific version to prevent public runner search errors
+        run: pip install nanobot-ai duckduckgo-search==7.2.1
 
-      - name: Purge and Reset Webhook
+      - name: Purge Webhook Conflicts
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
-          sleep 2
 
       - name: Run Nanobot Gateway
         timeout-minutes: 340 
         env:
-          # AI & Search
+          # LLM Config
           NANOBOT_PROVIDERS__GEMINI__API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          NANOBOT_AGENTS__DEFAULTS__MODEL: "gemini/gemini-1.5-flash"
-          
-          # Force DuckDuckGo
-          SEARCH_ENGINE: "duckduckgo"
-          WEB_SEARCH_PROVIDER: "duckduckgo"
-          NANOBOT_TOOLS__WEB__SEARCH__PROVIDER: "duckduckgo"
-          DDG_SAFE_SEARCH: "MODERATE"
+          NANOBOT_AGENTS__DEFAULTS__MODEL: "gemini/gemini-3.1-flash-lite-preview"
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           
           # Telegram Config
           NANOBOT_CHANNELS__TELEGRAM__ENABLED: "true"
           NANOBOT_CHANNELS__TELEGRAM__TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          # CORRECTED: No outer single quotes, allowing Pydantic to parse the list
-          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: ["${{ secrets.TELEGRAM_USER_ID }}"]
+          # Keeping your preferred string-list format
+          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: '["${{ secrets.TELEGRAM_USER_ID }}"]'
           
-          # Workspace & Identity
-          NANOBOT_WORKSPACE: "."
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Forced Free Search
+          SEARCH_ENGINE: "duckduckgo"
+          DEFAULT_SEARCH_PROVIDER: "duckduckgo"
+          NANOBOT_TOOLS__WEB__SEARCH__PROVIDER: "duckduckgo"
         run: nanobot gateway
 
       - name: Save and Push Reports
-        if: always()
+        if: always() 
         run: |
           git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add *.md *.json 2>/dev/null || true
-          if git diff --staged --quiet; then
-            echo "No changes to save."
-          else
-            git commit -m "Jiqiren Memory Update: $(date +'%Y-%m-%d %H:%M')"
-            git push
-          fi
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add *.md memory/*.md 2>/dev/null || true
+          # Updated commit message to Jiqiren style
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Jiqiren Memory Update: $(date +'%Y-%m-%d %H:%M')" && git push)
