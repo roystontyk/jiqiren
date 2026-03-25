@@ -26,7 +26,7 @@ jobs:
 
       - name: Purge Webhook Conflicts
         run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
+          curl -s -X POST "https://api.telegram.org/bot ${{ secrets.TELEGRAM_BOT_TOKEN }}/deleteWebhook?drop_pending_updates=true"
 
       - name: Run Nanobot Gateway
         timeout-minutes: 340 
@@ -39,8 +39,9 @@ jobs:
           # Telegram Config
           NANOBOT_CHANNELS__TELEGRAM__ENABLED: "true"
           NANOBOT_CHANNELS__TELEGRAM__TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          # FIX: Using the bracketed string format that passes GitHub validation
-          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: '["${{ secrets.TELEGRAM_USER_ID }}"]'
+          
+          # ✅ FIX: Remove outer single quotes, escape inner quotes for valid JSON string
+          NANOBOT_CHANNELS__TELEGRAM__ALLOW_FROM: "[\"${{ secrets.TELEGRAM_USER_ID }}\"]"
           
           # Forced Free Search
           SEARCH_ENGINE: "duckduckgo"
